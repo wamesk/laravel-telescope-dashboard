@@ -3,6 +3,7 @@
     "description": "Advanced Telescope Dashboard with Vue 3 UI and type-specific filtering",
     "type": "library",
     "license": "MIT",
+    "version": "1.0.0",
     "require": {
         "php": "^8.2",
         "laravel/framework": "^11.0",
