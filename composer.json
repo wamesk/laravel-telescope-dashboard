@@ -1,0 +1,25 @@
+{
+    "name": "wamesk/laravel-telescope-dashboard",
+    "description": "Advanced Telescope Dashboard with Vue 3 UI and type-specific filtering",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^11.0",
+        "laravel/telescope": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Wame\\LaravelTelescopeDashboard\\": "src/",
+            "Wame\\LaravelTelescopeDashboard\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Wame\\LaravelTelescopeDashboard\\Providers\\LaravelTelescopeDashboardServiceProvider"
+            ]
+        }
+    }
+}
