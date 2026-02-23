@@ -1,12 +1,12 @@
 # Laravel Telescope Dashboard
 
-Advanced replacement for the default Laravel Telescope UI. Built with **Vue 3**, **Tailwind CSS**, and type-specific filtering optimized with MySQL virtual generated columns.
+Advanced replacement for the default Laravel Telescope UI. Built with **Vue 3**, **Tailwind CSS**, and type-specific filtering optimized with virtual generated columns for MySQL and MariaDB.
 
 ## Features
 
 - **18 entry types** - Requests, Queries, Exceptions, Jobs, Logs, Mail, Events, Cache, Commands, Schedule, Models, Gates, Dumps, Notifications, Redis, Client Requests, Batches, Views
 - **Type-specific filters** - Each entry type has its own set of relevant filters (HTTP method, status code, duration, log level, job status, etc.)
-- **Virtual column optimization** - MySQL generated columns with composite indexes for fast filtering on large datasets
+- **Virtual column optimization** - MySQL/MariaDB generated columns with composite indexes for fast filtering on large datasets
 - **Dark / Light mode** - Theme toggle with localStorage persistence
 - **URL state sync** - Filters and sorting are synced to URL query params for bookmarkable views
 - **Column sorting** - Sort by sequence, created_at, duration, or query time with ASC/DESC toggle
@@ -23,7 +23,7 @@ Advanced replacement for the default Laravel Telescope UI. Built with **Vue 3**,
 - PHP 8.2+
 - Laravel 11.0+
 - Laravel Telescope 5.0+
-- MySQL 8.0+ (for virtual generated columns)
+- MySQL 8.0+ or MariaDB 10.2+ (for virtual generated columns and JSON functions)
 
 ## Installation
 
@@ -150,7 +150,7 @@ All filter and sorting states are synced to URL query parameters. This means you
 
 ## Database Optimization
 
-The package adds **MySQL virtual generated columns** to the `telescope_entries` table for efficient filtering without modifying stored data:
+The package adds **virtual generated columns** (compatible with MySQL 8.0+ and MariaDB 10.2+) to the `telescope_entries` table for efficient filtering without modifying stored data:
 
 | Column | Source | Type |
 |---|---|---|
@@ -219,7 +219,7 @@ Translation files are located in `resources/lang/{en,sk,cz}/telescope-dashboard.
 | UI framework | Blade templates | Vue 3 SPA |
 | Filtering | Basic | Type-specific with 18 filter variants |
 | Sorting | Sequence only | Sequence, created_at, duration, time |
-| Query performance | Direct JSON queries | Virtual columns + composite indexes |
+| Query performance | Direct JSON queries | Virtual columns + composite indexes (MySQL & MariaDB) |
 | Theme | Light only | Dark / Light with toggle |
 | URL state | None | Full filter/sort sync |
 | Entry details | Separate page | Inline expand + full-page detail |
