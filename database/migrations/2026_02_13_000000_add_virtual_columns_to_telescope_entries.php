@@ -23,7 +23,7 @@ return new class extends Migration
                 ADD COLUMN `c_uri` VARCHAR(500) AS (LEFT(JSON_UNQUOTE(JSON_EXTRACT(`content`, '$.uri')), 500)) VIRTUAL,
                 ADD COLUMN `c_response_status` SMALLINT UNSIGNED AS (JSON_EXTRACT(`content`, '$.response_status')) VIRTUAL,
                 ADD COLUMN `c_duration` DECIMAL(10,2) AS (JSON_EXTRACT(`content`, '$.duration')) VIRTUAL,
-                ADD COLUMN `c_time` DECIMAL(10,2) AS (JSON_EXTRACT(`content`, '$.time')) VIRTUAL
+                ADD COLUMN `c_time` DECIMAL(10,2) AS (JSON_UNQUOTE(JSON_EXTRACT(`content`, '$.time'))) VIRTUAL
         ");
 
         $schema = Schema::connection($connection);
