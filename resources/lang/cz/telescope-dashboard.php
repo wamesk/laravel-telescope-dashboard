@@ -32,7 +32,7 @@ return [
         'status' => 'Stav',
         'min_duration' => 'Min. trvání (ms)',
         'route_group' => 'Skupina cest',
-        'user_email' => 'Email uživatele',
+        'user_email' => 'Email / Auth ID / User ID',
         'date_range' => 'Rozsah dat',
         'date_from' => 'Od',
         'date_to' => 'Do',

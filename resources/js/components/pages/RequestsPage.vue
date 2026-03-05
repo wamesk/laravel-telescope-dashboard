@@ -64,10 +64,10 @@
                 </select>
             </div>
 
-            <!-- User Email -->
+            <!-- User Email / Auth ID / User ID -->
             <div>
-                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">User Email</label>
-                <input v-model="filters.user_email" type="text" class="input-field" placeholder="john@example.com" />
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Email / Auth ID / User ID</label>
+                <input v-model="filters.user_email" type="text" class="input-field" placeholder="email, auth ID or user ID..." />
             </div>
 
             <!-- Date Range -->
@@ -94,6 +94,13 @@
             </template>
             <template #cell-content.response_status="{ value }">
                 <Badge :label="value" type="status" />
+            </template>
+            <template #cell-content.user="{ value }">
+                <div v-if="value" class="truncate">
+                    <span class="block truncate" :title="value.email">{{ value.email || '-' }}</span>
+                    <span v-if="value.id" class="block truncate text-xs text-gray-400 dark:text-gray-500" :title="value.id">{{ value.id }}</span>
+                </div>
+                <span v-else>-</span>
             </template>
             <template #cell-content.duration="{ value }">
                 <span :class="value > 1000 ? 'text-red-400' : value > 500 ? 'text-yellow-400' : 'text-gray-300'">

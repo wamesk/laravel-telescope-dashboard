@@ -32,7 +32,7 @@ return [
         'status' => 'Status',
         'min_duration' => 'Min Duration (ms)',
         'route_group' => 'Route Group',
-        'user_email' => 'User Email',
+        'user_email' => 'User Email / Auth ID / User ID',
         'date_range' => 'Date Range',
         'date_from' => 'From',
         'date_to' => 'To',

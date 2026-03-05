@@ -253,7 +253,10 @@ class TelescopeQueryService
         }
 
         if (! empty($filters['user_email'])) {
-            $query->where('content->user->email', 'LIKE', '%'.$filters['user_email'].'%');
+            $query->where(function ($q) use ($filters) {
+                $q->where('content->user->email', 'LIKE', '%'.$filters['user_email'].'%')
+                    ->orWhere('content->user->id', 'LIKE', '%'.$filters['user_email'].'%');
+            });
         }
 
         if (! empty($filters['route_group'])) {
@@ -441,7 +444,10 @@ class TelescopeQueryService
                 'duration' => $content['duration'] ?? null,
                 'memory' => $content['memory'] ?? null,
                 'controller_action' => $content['controller_action'] ?? null,
-                'user' => $content['user']['email'] ?? $content['user']['name'] ?? null,
+                'user' => isset($content['user']) ? [
+                    'email' => $content['user']['email'] ?? $content['user']['name'] ?? null,
+                    'id' => $content['user']['id'] ?? null,
+                ] : null,
                 'ip_address' => $content['ip_address'] ?? null,
             ],
             'query' => [
