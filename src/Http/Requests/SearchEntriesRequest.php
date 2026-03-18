@@ -24,8 +24,8 @@ class SearchEntriesRequest extends FormRequest
             'sort_by' => ['nullable', 'string', 'in:sequence,created_at,content.duration,content.time'],
             'sort_direction' => ['nullable', 'string', 'in:asc,desc'],
             'offset' => ['nullable', 'integer', 'min:0'],
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date'],
+            'date_from' => ['nullable', 'date_format:Y-m-d\TH:i'],
+            'date_to' => ['nullable', 'date_format:Y-m-d\TH:i'],
             'content' => ['nullable', 'string', 'max:500'],
             // Request-specific
             'methods' => ['nullable', 'array'],

@@ -181,11 +181,11 @@ class TelescopeQueryService
         }
 
         if (! empty($filters['date_from'])) {
-            $query->where('created_at', '>=', $filters['date_from']);
+            $query->where('created_at', '>=', str_replace('T', ' ', $filters['date_from']));
         }
 
         if (! empty($filters['date_to'])) {
-            $query->where('created_at', '<=', $filters['date_to'].' 23:59:59');
+            $query->where('created_at', '<=', str_replace('T', ' ', $filters['date_to']));
         }
 
         if (! empty($filters['content'])) {
