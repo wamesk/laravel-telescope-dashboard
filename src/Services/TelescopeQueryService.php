@@ -418,6 +418,22 @@ class TelescopeQueryService
             $query->where('c_response_status', (int) $filters['client_status']);
         }
 
+        if (! empty($filters['client_statuses'])) {
+            $query->where(function ($q) use ($filters) {
+                foreach ($filters['client_statuses'] as $status) {
+                    if (str_ends_with($status, 'xx')) {
+                        $prefix = (int) substr($status, 0, 1);
+                        $q->orWhere(function ($inner) use ($prefix) {
+                            $inner->where('c_response_status', '>=', $prefix * 100)
+                                ->where('c_response_status', '<', $prefix * 100 + 100);
+                        });
+                    } else {
+                        $q->orWhere('c_response_status', (int) $status);
+                    }
+                }
+            });
+        }
+
         if (! empty($filters['min_duration'])) {
             $query->where('c_duration', '>=', $filters['min_duration']);
         }

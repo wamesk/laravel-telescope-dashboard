@@ -26,13 +26,18 @@
                 />
             </div>
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status Code</label>
-                <input
-                    v-model="filters.client_status"
-                    type="text"
-                    class="input-field"
-                    placeholder="Filter by status code"
-                />
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
+                <div class="flex flex-wrap gap-2">
+                    <label v-for="s in ['2xx','3xx','4xx','5xx']" :key="s" class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                        <input
+                            type="checkbox"
+                            :checked="filters.client_statuses?.includes(s)"
+                            class="rounded bg-white dark:bg-telescope-dark border-gray-300 dark:border-telescope-border text-telescope-accent focus:ring-telescope-accent"
+                            @change="toggleClientStatus(s)"
+                        />
+                        {{ s }}
+                    </label>
+                </div>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Min Duration (ms)</label>
@@ -115,7 +120,7 @@ const {
 const { filters, getActiveFilters, resetFilters } = useFilters({
     client_method: '',
     client_uri: '',
-    client_status: '',
+    client_statuses: [],
     min_duration: null,
     content: '',
     date_from: '',
@@ -135,6 +140,12 @@ const columns = [
 const tabs = [
     { key: 'content', label: 'Overview' }
 ];
+
+function toggleClientStatus(status) {
+    const idx = filters.client_statuses.indexOf(status);
+    if (idx >= 0) filters.client_statuses.splice(idx, 1);
+    else filters.client_statuses.push(status);
+}
 
 const handleSort = (column) => {
     if (sortBy.value === column) {

@@ -75,6 +75,8 @@ class SearchEntriesRequest extends FormRequest
             'client_method' => ['nullable', 'string'],
             'client_uri' => ['nullable', 'string', 'max:500'],
             'client_status' => ['nullable', 'string'],
+            'client_statuses' => ['nullable', 'array'],
+            'client_statuses.*' => ['string'],
             // Batch-specific
             'batch_name' => ['nullable', 'string', 'max:255'],
         ];
