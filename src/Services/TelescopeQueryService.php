@@ -253,10 +253,7 @@ class TelescopeQueryService
         }
 
         if (! empty($filters['user_email'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('content->user->email', 'LIKE', '%'.$filters['user_email'].'%')
-                    ->orWhere('content->user->id', 'LIKE', '%'.$filters['user_email'].'%');
-            });
+            $this->applyUserSearch($query, (string) $filters['user_email']);
         }
 
         if (! empty($filters['route_group'])) {
@@ -266,6 +263,67 @@ class TelescopeQueryService
                 $query->where('c_uri', 'LIKE', $pattern);
             }
         }
+    }
+
+    /**
+     * Apply user search with format auto-detection.
+     *
+     * Strategy:
+     * - Full UUID: indexed equality lookup on telescope_entries_tags.tag = 'Auth:{uuid}'
+     * - UUID prefix (>= 8 hex chars): tag prefix LIKE 'Auth:{prefix}%' (uses tag index)
+     * - Email format: JSON LIKE only on content->user->email
+     * - Other: fallback JSON LIKE on email and id within already narrow type scope
+     */
+    protected function applyUserSearch(Builder $query, string $value): void
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return;
+        }
+
+        if ($this->isUuid($value)) {
+            $query->whereExists(function ($sub) use ($value) {
+                $sub->select(DB::raw(1))
+                    ->from('telescope_entries_tags')
+                    ->whereColumn('telescope_entries_tags.entry_uuid', 'telescope_entries.uuid')
+                    ->where('tag', 'Auth:'.$value);
+            });
+
+            return;
+        }
+
+        if ($this->isUuidPrefix($value)) {
+            $query->whereExists(function ($sub) use ($value) {
+                $sub->select(DB::raw(1))
+                    ->from('telescope_entries_tags')
+                    ->whereColumn('telescope_entries_tags.entry_uuid', 'telescope_entries.uuid')
+                    ->where('tag', 'LIKE', 'Auth:'.$value.'%');
+            });
+
+            return;
+        }
+
+        if (str_contains($value, '@')) {
+            $query->where('content->user->email', 'LIKE', '%'.$value.'%');
+
+            return;
+        }
+
+        $query->where(function ($q) use ($value) {
+            $q->where('content->user->email', 'LIKE', '%'.$value.'%')
+                ->orWhere('content->user->id', 'LIKE', '%'.$value.'%');
+        });
+    }
+
+    protected function isUuid(string $value): bool
+    {
+        return (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $value);
+    }
+
+    protected function isUuidPrefix(string $value): bool
+    {
+        return (bool) preg_match('/^[0-9a-f]{8,}(-[0-9a-f]*)*$/i', $value);
     }
 
     protected function applyQueryFilters(Builder $query, array $filters): void
