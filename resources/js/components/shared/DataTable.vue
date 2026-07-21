@@ -65,7 +65,11 @@
                                 class="table-cell"
                             >
                                 <slot :name="'cell-' + col.key" :entry="entry" :value="getNestedValue(entry, col.key)">
-                                    <span class="truncate block max-w-xs" :title="String(getNestedValue(entry, col.key) ?? '')">
+                                    <span
+                                        class="block"
+                                        :class="col.wrap ? 'whitespace-normal break-all' : 'truncate max-w-xs'"
+                                        :title="String(getNestedValue(entry, col.key) ?? '')"
+                                    >
                                         {{ formatValue(getNestedValue(entry, col.key), col) }}
                                     </span>
                                 </slot>
@@ -136,6 +140,18 @@ function getNestedValue(obj, path) {
 }
 
 function formatValue(value, col) {
+    const formatted = formatRawValue(value, col);
+
+    // Hard character cap for wrapping columns so a pathological value cannot
+    // blow up the row height. The title attribute still carries the full value.
+    if (col.maxChars && formatted.length > col.maxChars) {
+        return formatted.substring(0, col.maxChars) + '...';
+    }
+
+    return formatted;
+}
+
+function formatRawValue(value, col) {
     if (value === null || value === undefined) return '-';
     if (col.format === 'duration') return `${Number(value).toFixed(2)} ms`;
     if (col.format === 'memory') return `${(Number(value) / 1024 / 1024).toFixed(1)} MB`;

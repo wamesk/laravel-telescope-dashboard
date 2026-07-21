@@ -154,7 +154,7 @@ const { restoreFromUrl, syncToUrl } = useUrlSync(filters, sortBy, sortDirection)
 
 const columns = [
     { key: 'content.method', label: 'Method', width: '80px' },
-    { key: 'content.uri', label: 'URI' },
+    { key: 'content.uri', label: 'URI', wrap: true, maxChars: 300 },
     { key: 'content.response_status', label: 'Status', width: '80px' },
     { key: 'content.duration', label: 'Duration', width: '120px', format: 'duration', sortable: true, sortKey: 'content.duration' },
     { key: 'content.user', label: 'User', width: '150px' },
