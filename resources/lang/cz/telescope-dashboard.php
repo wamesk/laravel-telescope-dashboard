@@ -62,6 +62,8 @@ return [
         'client_uri' => 'URI',
         'client_status' => 'Kód stavu',
         'batch_name' => 'Název dávky',
+        'api_type' => 'Typ API',
+        'api_type_unmatched' => 'Nezařazené',
     ],
 
     'columns' => [
@@ -71,6 +73,7 @@ return [
         'duration' => 'Trvání',
         'user' => 'Uživatel',
         'time' => 'Čas',
+        'api_type' => 'Typ API',
         'sql' => 'SQL',
         'connection' => 'Připojení',
         'file' => 'Soubor',

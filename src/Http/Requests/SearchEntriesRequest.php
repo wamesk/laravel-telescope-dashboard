@@ -27,6 +27,8 @@ class SearchEntriesRequest extends FormRequest
             'date_from' => ['nullable', 'date_format:Y-m-d\TH:i'],
             'date_to' => ['nullable', 'date_format:Y-m-d\TH:i'],
             'content' => ['nullable', 'string', 'max:500'],
+            // Request / client request API type
+            'api_type' => ['nullable', 'string', 'max:255'],
             // Request-specific
             'methods' => ['nullable', 'array'],
             'methods.*' => ['string', 'in:GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS'],

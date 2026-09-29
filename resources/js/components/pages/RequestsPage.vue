@@ -19,6 +19,16 @@
                 </div>
             </div>
 
+            <!-- API Type -->
+            <div v-if="apiTypeNames.length">
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t.filters?.api_type || 'API Type' }}</label>
+                <select v-model="filters.api_type" class="select-field">
+                    <option :value="null">{{ t.values?.all || 'All' }}</option>
+                    <option v-for="name in apiTypeNames" :key="name" :value="name">{{ name }}</option>
+                    <option :value="apiTypeUnmatched">{{ t.filters?.api_type_unmatched || 'Unmatched' }}</option>
+                </select>
+            </div>
+
             <!-- URI -->
             <div>
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">URI</label>
@@ -130,12 +140,17 @@ import { onMounted } from 'vue';
 import { useEntries } from '../../composables/useEntries';
 import { useFilters } from '../../composables/useFilters';
 import { useUrlSync } from '../../composables/useUrlSync';
+import { getConfig, getTranslations } from '../../api';
 import FilterPanel from '../shared/FilterPanel.vue';
 import DataTable from '../shared/DataTable.vue';
 import EntryDetail from '../shared/EntryDetail.vue';
 import LoadMore from '../shared/LoadMore.vue';
 import Badge from '../shared/Badge.vue';
 import DateRangeFilter from '../shared/DateRangeFilter.vue';
+
+const t = getTranslations();
+const apiTypeNames = getConfig().apiTypes?.request || [];
+const apiTypeUnmatched = getConfig().apiTypes?.unmatched || '__unmatched__';
 
 const { entries, loading, loadingMore, hasMore, error, expandedEntry, entryDetail, loadingDetail, fetchEntries, loadMore, toggleDetail, sortBy, sortDirection, setSort } = useEntries('request');
 const { filters, getActiveFilters, resetFilters } = useFilters({
@@ -146,6 +161,7 @@ const { filters, getActiveFilters, resetFilters } = useFilters({
     min_duration: null,
     route_group: null,
     user_email: null,
+    api_type: null,
     date_from: null,
     date_to: null,
 });
@@ -154,6 +170,7 @@ const { restoreFromUrl, syncToUrl } = useUrlSync(filters, sortBy, sortDirection)
 
 const columns = [
     { key: 'content.method', label: 'Method', width: '80px' },
+    ...(apiTypeNames.length ? [{ key: 'content.api_type', label: t.columns?.api_type || 'API Type', width: '200px' }] : []),
     { key: 'content.uri', label: 'URI', wrap: true, maxChars: 300 },
     { key: 'content.response_status', label: 'Status', width: '80px' },
     { key: 'content.duration', label: 'Duration', width: '120px', format: 'duration', sortable: true, sortKey: 'content.duration' },

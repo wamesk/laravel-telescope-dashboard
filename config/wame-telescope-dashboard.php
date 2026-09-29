@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Wame\LaravelTelescopeDashboard\ApiTypes\ConfigApiTypeProvider;
+
 return [
     'enabled' => env('TELESCOPE_DASHBOARD_ENABLED', true),
     'path' => env('TELESCOPE_DASHBOARD_PATH', 'telescope-dashboard'),
@@ -16,4 +18,16 @@ return [
     ],
     'telescope_path' => env('TELESCOPE_PATH', 'telescope'),
     'middleware' => ['web', 'auth'],
+
+    /*
+     * "API type" column and filter for Requests and Client Requests.
+     *
+     * The provider returns a "METHOD mask" => name map per entry type; the default
+     * one reads it from the config file named by `config_key`
+     * (config/telescope-api-types.php). Without a map the column stays hidden.
+     */
+    'api_types' => [
+        'provider' => ConfigApiTypeProvider::class,
+        'config_key' => 'telescope-api-types',
+    ],
 ];

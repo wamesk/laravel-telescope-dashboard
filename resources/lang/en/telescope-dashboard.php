@@ -62,6 +62,8 @@ return [
         'client_uri' => 'URI',
         'client_status' => 'Status Code',
         'batch_name' => 'Batch Name',
+        'api_type' => 'API Type',
+        'api_type_unmatched' => 'Unmatched',
     ],
 
     'columns' => [
@@ -71,6 +73,7 @@ return [
         'duration' => 'Duration',
         'user' => 'User',
         'time' => 'Time',
+        'api_type' => 'API Type',
         'sql' => 'SQL',
         'connection' => 'Connection',
         'file' => 'File',

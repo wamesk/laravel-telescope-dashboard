@@ -6,6 +6,8 @@ namespace Wame\LaravelTelescopeDashboard\Providers;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Wame\LaravelTelescopeDashboard\ApiTypes\ConfigApiTypeProvider;
+use Wame\LaravelTelescopeDashboard\Contracts\ApiTypeProvider;
 use Wame\LaravelTelescopeDashboard\Http\Middleware\AuthorizeDashboard;
 
 class LaravelTelescopeDashboardServiceProvider extends ServiceProvider
@@ -17,6 +19,10 @@ class LaravelTelescopeDashboardServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'telescope-dashboard');
 
         $this->loadTranslationsFrom(__DIR__.'/../../resources/lang', 'telescope-dashboard');
+
+        $this->app->bindIf(ApiTypeProvider::class, fn ($app) => $app->make(
+            config('wame-telescope-dashboard.api_types.provider', ConfigApiTypeProvider::class)
+        ));
     }
 
     public function boot(): void

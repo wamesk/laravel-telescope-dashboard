@@ -6,6 +6,7 @@ namespace Wame\LaravelTelescopeDashboard\Services;
 
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
+use Wame\LaravelTelescopeDashboard\ApiTypes\ApiTypeMatcher;
 
 class TelescopeQueryService
 {
@@ -13,10 +14,13 @@ class TelescopeQueryService
 
     protected int $perPage;
 
-    public function __construct()
+    protected ApiTypeMatcher $apiTypes;
+
+    public function __construct(?ApiTypeMatcher $apiTypes = null)
     {
         $this->connection = config('wame-telescope-dashboard.connection', 'mysql_telescope');
         $this->perPage = config('wame-telescope-dashboard.per_page', 50);
+        $this->apiTypes = $apiTypes ?? app(ApiTypeMatcher::class);
     }
 
     public function search(array $filters): array
@@ -256,6 +260,10 @@ class TelescopeQueryService
             $this->applyUserSearch($query, (string) $filters['user_email']);
         }
 
+        if (! empty($filters['api_type'])) {
+            $this->apiTypes->applyFilter($query, 'request', (string) $filters['api_type']);
+        }
+
         if (! empty($filters['route_group'])) {
             $groups = config('wame-telescope-dashboard.route_groups', []);
             if (isset($groups[$filters['route_group']])) {
@@ -472,6 +480,10 @@ class TelescopeQueryService
             $query->where('c_uri', 'LIKE', '%'.$filters['client_uri'].'%');
         }
 
+        if (! empty($filters['api_type'])) {
+            $this->apiTypes->applyFilter($query, 'client_request', (string) $filters['api_type']);
+        }
+
         if (! empty($filters['client_status'])) {
             $query->where('c_response_status', (int) $filters['client_status']);
         }
@@ -514,6 +526,7 @@ class TelescopeQueryService
             'request' => [
                 'method' => $content['method'] ?? null,
                 'uri' => $content['uri'] ?? null,
+                'api_type' => $this->apiTypes->resolve('request', $content['method'] ?? null, $content['uri'] ?? null),
                 'response_status' => $content['response_status'] ?? null,
                 'duration' => $content['duration'] ?? null,
                 'memory' => $content['memory'] ?? null,
@@ -603,6 +616,7 @@ class TelescopeQueryService
             'client_request' => [
                 'method' => $content['method'] ?? null,
                 'uri' => $content['uri'] ?? null,
+                'api_type' => $this->apiTypes->resolve('client_request', $content['method'] ?? null, $content['uri'] ?? null),
                 'response_status' => $content['response_status'] ?? null,
                 'duration' => $content['duration'] ?? null,
             ],

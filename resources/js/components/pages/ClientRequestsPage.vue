@@ -16,6 +16,17 @@
                     <option value="DELETE">DELETE</option>
                 </select>
             </div>
+            <div v-if="apiTypeNames.length" class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t.filters?.api_type || 'API Type' }}</label>
+                <select
+                    v-model="filters.api_type"
+                    class="select-field"
+                >
+                    <option value="">{{ t.values?.all || 'All' }}</option>
+                    <option v-for="name in apiTypeNames" :key="name" :value="name">{{ name }}</option>
+                    <option :value="apiTypeUnmatched">{{ t.filters?.api_type_unmatched || 'Unmatched' }}</option>
+                </select>
+            </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URI</label>
                 <input
@@ -99,6 +110,11 @@ import EntryDetail from '../shared/EntryDetail.vue';
 import LoadMore from '../shared/LoadMore.vue';
 import DateRangeFilter from '../shared/DateRangeFilter.vue';
 import Badge from '../shared/Badge.vue';
+import { getConfig, getTranslations } from '../../api';
+
+const t = getTranslations();
+const apiTypeNames = getConfig().apiTypes?.client_request || [];
+const apiTypeUnmatched = getConfig().apiTypes?.unmatched || '__unmatched__';
 
 const {
     entries,
@@ -120,6 +136,7 @@ const {
 const { filters, getActiveFilters, resetFilters } = useFilters({
     client_method: '',
     client_uri: '',
+    api_type: '',
     client_statuses: [],
     min_duration: null,
     content: '',
@@ -131,6 +148,7 @@ const { restoreFromUrl, syncToUrl } = useUrlSync(filters, sortBy, sortDirection)
 
 const columns = [
     { key: 'content.method', label: 'Method', width: '80px' },
+    ...(apiTypeNames.length ? [{ key: 'content.api_type', label: t.columns?.api_type || 'API Type', width: '240px' }] : []),
     { key: 'content.uri', label: 'URI', wrap: true, maxChars: 300 },
     { key: 'content.response_status', label: 'Status', width: '80px' },
     { key: 'content.duration', label: 'Duration', width: '120px', format: 'duration', sortable: true, sortKey: 'content.duration' },

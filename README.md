@@ -6,6 +6,7 @@ Advanced replacement for the default Laravel Telescope UI. Built with **Vue 3**,
 
 - **18 entry types** - Requests, Queries, Exceptions, Jobs, Logs, Mail, Events, Cache, Commands, Schedule, Models, Gates, Dumps, Notifications, Redis, Client Requests, Batches, Views
 - **Type-specific filters** - Each entry type has its own set of relevant filters (HTTP method, status code, duration, log level, job status, etc.)
+- **API type column** - Name Requests and Client Requests (e.g. by OpenAPI `operationId`) from a per-project URL mask map, with a matching filter
 - **Virtual column optimization** - MySQL/MariaDB generated columns with composite indexes for fast filtering on large datasets
 - **Dark / Light mode** - Theme toggle with localStorage persistence
 - **URL state sync** - Filters and sorting are synced to URL query params for bookmarkable views
@@ -120,7 +121,8 @@ Each entry type provides its own set of filters. Examples:
 
 | Entry Type | Available Filters |
 |---|---|
-| **Requests** | HTTP method, URI, status code (2xx/3xx/4xx/5xx), min duration, route group, user email |
+| **Requests** | HTTP method, API type, URI, status code (2xx/3xx/4xx/5xx), min duration, route group, user email |
+| **Client Requests** | HTTP method, API type, URI, status code (2xx/3xx/4xx/5xx), min duration |
 | **Queries** | Slow queries (>100ms), query type (SELECT/INSERT/UPDATE/DELETE), min duration |
 | **Exceptions** | Exception class |
 | **Jobs** | Status (pending/completed/failed), job name |
@@ -146,6 +148,54 @@ All filter and sorting states are synced to URL query parameters. This means you
 
 ```
 /telescope-dashboard/#/requests?methods=GET,POST&statuses=4xx,5xx&sort_by=c_duration&sort_direction=desc
+```
+
+## API Type Column
+
+Requests and Client Requests can show an **API type** column and filter, e.g. the OpenAPI `operationId` of the endpoint. The names come from a per-project map of URL masks; without a map the column and filter stay hidden.
+
+Create `config/telescope-api-types.php` in the application:
+
+```php
+return [
+    // Incoming requests (Telescope stores the path + query string)
+    'request' => [
+        'GET /api/v1/location/autocomplete' => 'PostLocationAutocomplete',
+        'GET /api/v1/location/{placeId}' => 'GetLocationPoint',
+        'POST /api/v1/point/{pod}/meter/{sn}/deduction' => 'PostDeductionCreate',
+    ],
+
+    // Outgoing HTTP client requests (Telescope stores the full URL)
+    'client_request' => [
+        'GET */api/v1/pods/{podNumber}/meters' => 'Billien7.getPodMeters',
+        'POST */api/v1/pods' => 'Billien7.getPointsOfDeliveryDetail',
+    ],
+];
+```
+
+Mask syntax (key = `"METHOD mask"`, value = display name):
+
+| Part | Meaning |
+|---|---|
+| `GET ` prefix | Optional HTTP method; without it the mask matches any method |
+| `{param}` | Exactly one path segment |
+| `*` | Anything up to the query string (e.g. the scheme and host of outgoing requests) |
+| no `?` in the mask | The query string is ignored |
+| `?key=*` in the mask | The query string is matched too; `*` there matches anything |
+
+- The **first matching mask wins** — keep literal segments above `{param}` masks.
+- Several masks may share one name; the filter (sorted alphabetically) then groups them.
+- Unmatched entries show `-`; the filter option *Unmatched* lists them (handy to find endpoints missing from the map).
+- The column (PHP `preg_match`) and the filter (SQL `REGEXP` on the `c_method` / `c_uri` virtual columns) share the same compiled rules, so they always agree.
+
+The map is read by `ConfigApiTypeProvider`. To load it from elsewhere (a database, a parsed OpenAPI file, ...), implement `Wame\LaravelTelescopeDashboard\Contracts\ApiTypeProvider` and point the config at it:
+
+```php
+// config/wame-telescope-dashboard.php
+'api_types' => [
+    'provider' => App\Telescope\OpenApiTypeProvider::class,
+    'config_key' => 'telescope-api-types',
+],
 ```
 
 ## Database Optimization
