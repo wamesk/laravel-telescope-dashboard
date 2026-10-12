@@ -170,6 +170,12 @@ class ApiTypeColumn
                         ->select(['sequence', 'c_method', 'c_uri', static::COLUMN])
                         ->where('type', $type)
                         ->where('should_display_on_index', $displayOnIndex)
+                        // chunkById() appends `sequence` to these orders. Ordering by the full
+                        // (type, should_display_on_index, sequence) key makes MySQL / MariaDB
+                        // range-scan Telescope's index instead of walking the primary key
+                        // through every entry type (or intersecting indexes with a filesort).
+                        ->orderBy('type')
+                        ->orderBy('should_display_on_index')
                         ->chunkById($chunkSize, function (Collection $rows) use ($type, &$changed): void {
                             $changed += $this->syncRows($type, $rows);
                         }, 'sequence');

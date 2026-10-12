@@ -163,7 +163,21 @@ it('recomputes stale, missing and outdated values and only touches changed rows'
     $removed = insertTelescopeEntry('request', 'GET', '/api/v1/removed', 'RemovedEndpoint');
     $current = insertTelescopeEntry('request', 'GET', '/api/v1/point/SK1/check', 'GetCollectionPointCheck');
 
+    telescopeStorage()->enableQueryLog();
+    telescopeStorage()->flushQueryLog();
+
     $changed = app(ApiTypeColumn::class)->sync(2);
+
+    $selects = array_values(array_filter(
+        array_column(telescopeStorage()->getQueryLog(), 'query'),
+        fn (string $sql) => str_starts_with($sql, 'select')
+    ));
+    telescopeStorage()->disableQueryLog();
+
+    // Ordered by the whole (type, should_display_on_index, sequence) index key, so
+    // every chunk is a range scan of that index rather than a primary key walk.
+    expect($selects)->not->toBeEmpty()
+        ->each->toContain('order by `type` asc, `should_display_on_index` asc, `sequence` asc');
 
     expect($changed)->toBe(4)
         ->and(storedApiType($missing))->toBe('GetSettings')
