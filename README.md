@@ -6,7 +6,7 @@ Advanced replacement for the default Laravel Telescope UI. Built with **Vue 3**,
 
 - **18 entry types** - Requests, Queries, Exceptions, Jobs, Logs, Mail, Events, Cache, Commands, Schedule, Models, Gates, Dumps, Notifications, Redis, Client Requests, Batches, Views
 - **Type-specific filters** - Each entry type has its own set of relevant filters (HTTP method, status code, duration, log level, job status, etc.)
-- **API type column** - Name Requests and Client Requests (e.g. by OpenAPI `operationId`) from a per-project URL mask map, with a matching filter
+- **API type column** - Name Requests and Client Requests (e.g. by OpenAPI `operationId`) from a per-project URL mask map, with a matching filter; the name is stored in `telescope_entries.api_type` for plain SQL queries
 - **Virtual column optimization** - MySQL/MariaDB generated columns with composite indexes for fast filtering on large datasets
 - **Dark / Light mode** - Theme toggle with localStorage persistence
 - **URL state sync** - Filters and sorting are synced to URL query params for bookmarkable views
@@ -186,7 +186,54 @@ Mask syntax (key = `"METHOD mask"`, value = display name):
 - The **first matching mask wins** — keep literal segments above `{param}` masks.
 - Several masks may share one name; the filter (sorted alphabetically) then groups them.
 - Unmatched entries show `-`; the filter option *Unmatched* lists them (handy to find endpoints missing from the map).
-- The column (PHP `preg_match`) and the filter (SQL `REGEXP` on the `c_method` / `c_uri` virtual columns) share the same compiled rules, so they always agree.
+
+### Stored `api_type` column
+
+The resolved name is stored in the `telescope_entries.api_type` column (`VARCHAR(191)`, `NULL` when no mask matches, index `idx_te_api_type`), so it can be queried directly:
+
+```sql
+SELECT api_type, COUNT(*) AS requests, AVG(c_duration) AS avg_ms
+FROM telescope_entries
+WHERE type = 'request' AND created_at >= NOW() - INTERVAL 1 DAY
+GROUP BY api_type
+ORDER BY requests DESC;
+```
+
+The dashboard column and filter read the same column (the filter is an indexed equality instead of a `REGEXP` per row).
+
+- **New entries** get their name right after Telescope stores them (one `UPDATE` per stored batch through the `uuid` index, only when the batch holds a matching request / client request). Telescope stores entries while the application terminates, after the response was sent.
+- **Existing entries** are recomputed by:
+
+  ```bash
+  php artisan telescope-dashboard:sync-api-types          # only when the map changed since the last sync
+  php artisan telescope-dashboard:sync-api-types --force  # always
+  ```
+
+  It reads only `sequence`, `c_method`, `c_uri` and `api_type` in chunks of `sync_chunk` rows and updates only the rows whose name changed.
+- **Map changes** are picked up automatically: after every `php artisan migrate` the package compares a fingerprint of the map with the last synced one (kept in the cache) and, when it differs, queues `SyncApiTypesJob` (unique, so parallel deploys run it once). The first `migrate` after installing the column backfills all existing entries this way. Disable it with `TELESCOPE_DASHBOARD_API_TYPES_SYNC_AFTER_MIGRATE=false`.
+- A provider whose map changes at runtime (e.g. read from a database) can schedule the command instead; it exits right away while the map is unchanged:
+
+  ```php
+  // routes/console.php
+  Schedule::command('telescope-dashboard:sync-api-types')->hourly();
+  ```
+
+```php
+// config/wame-telescope-dashboard.php
+'api_types' => [
+    'provider' => ConfigApiTypeProvider::class,
+    'config_key' => 'telescope-api-types',
+    'sync_after_migrate' => env('TELESCOPE_DASHBOARD_API_TYPES_SYNC_AFTER_MIGRATE', true),
+    'sync_queue' => [
+        'connection' => env('TELESCOPE_DASHBOARD_API_TYPES_SYNC_CONNECTION'),
+        'queue' => env('TELESCOPE_DASHBOARD_API_TYPES_SYNC_QUEUE'),
+    ],
+    'sync_chunk' => 1000,
+    'cache_store' => null,
+],
+```
+
+### Custom provider
 
 The map is read by `ConfigApiTypeProvider`. To load it from elsewhere (a database, a parsed OpenAPI file, ...), implement `Wame\LaravelTelescopeDashboard\Contracts\ApiTypeProvider` and point the config at it:
 
@@ -211,6 +258,8 @@ The package adds **virtual generated columns** (compatible with MySQL 8.0+ and M
 | `c_time` | `content->$.time` | `DECIMAL(10,2)` |
 
 Each virtual column has a **composite index** with `(type, should_display_on_index, <column>)` for optimal query performance.
+
+The stored (not virtual) `api_type` column holds the resolved API type name and is indexed as `(api_type, type, should_display_on_index)`, see [Stored `api_type` column](#stored-api_type-column).
 
 ## API Endpoints
 

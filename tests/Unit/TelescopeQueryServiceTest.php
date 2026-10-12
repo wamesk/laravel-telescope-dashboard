@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
+use Wame\LaravelTelescopeDashboard\ApiTypes\ApiTypeMatcher;
 use Wame\LaravelTelescopeDashboard\Services\TelescopeQueryService;
 
 function telescopeConnectionAvailable(): bool
@@ -91,3 +93,23 @@ it('respects per_page limit', function () {
 
     expect($result['entries'])->toHaveCount(0);
 })->skip(fn () => ! telescopeConnectionAvailable(), 'Telescope DB connection not available');
+
+it('filters the API type on the stored column', function (string $apiType, string $where, array $bindings) {
+    $service = new class extends TelescopeQueryService
+    {
+        public function query(array $filters): Builder
+        {
+            return $this->buildQuery($filters);
+        }
+    };
+
+    foreach (['request', 'client_request'] as $type) {
+        $query = $service->query(['type' => $type, 'api_type' => $apiType]);
+
+        expect($query->toSql())->toEndWith($where)
+            ->and($query->getBindings())->toBe([$type, true, ...$bindings]);
+    }
+})->with([
+    'name' => ['GetCollectionPointCheck', 'and `api_type` = ?', ['GetCollectionPointCheck']],
+    'unmatched' => [ApiTypeMatcher::UNMATCHED, 'and `api_type` is null', []],
+]);

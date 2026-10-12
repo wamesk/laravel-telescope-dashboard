@@ -26,6 +26,11 @@ class ApiTypeMatcher
      */
     protected const URI_COLUMN_LENGTH = 500;
 
+    /**
+     * Length of the stored api_type column; longer names are cut to fit it.
+     */
+    public const NAME_MAX_LENGTH = 191;
+
     protected const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
     /**
@@ -75,6 +80,9 @@ class ApiTypeMatcher
 
     /**
      * Restrict the query to entries resolved to the given name (or to UNMATCHED).
+     *
+     * @deprecated 1.5.0 The dashboard filters on the stored api_type column
+     *             (an indexed equality) instead of evaluating REGEXP on every row.
      */
     public function applyFilter(Builder $query, string $entryType, string $name): void
     {
@@ -221,7 +229,11 @@ class ApiTypeMatcher
                 continue;
             }
 
-            $rules[] = ['method' => $method, 'regex' => $this->compileMask($mask), 'name' => $name];
+            $rules[] = [
+                'method' => $method,
+                'regex' => $this->compileMask($mask),
+                'name' => mb_substr($name, 0, static::NAME_MAX_LENGTH),
+            ];
         }
 
         return $this->rules[$entryType] = $rules;

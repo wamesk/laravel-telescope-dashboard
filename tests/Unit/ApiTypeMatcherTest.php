@@ -189,3 +189,13 @@ it('matches nothing for an unknown name and nothing is filtered for unmatched wi
     expect($unknown->toSql())->toBe('select * from `telescope_entries` where 1 = 0')
         ->and($unmatchedWithoutMap->toSql())->toBe('select * from `telescope_entries`');
 });
+
+it('cuts names to the length of the stored api_type column', function () {
+    $long = str_repeat('a', ApiTypeMatcher::NAME_MAX_LENGTH + 20);
+    $matcher = apiTypeMatcher(['request' => ['GET /api/v1/long' => $long]]);
+
+    $expected = str_repeat('a', ApiTypeMatcher::NAME_MAX_LENGTH);
+
+    expect($matcher->resolve('request', 'GET', '/api/v1/long'))->toBe($expected)
+        ->and($matcher->names('request'))->toBe([$expected]);
+});

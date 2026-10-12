@@ -6,6 +6,7 @@ namespace Wame\LaravelTelescopeDashboard\Services;
 
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
+use Wame\LaravelTelescopeDashboard\ApiTypes\ApiTypeColumn;
 use Wame\LaravelTelescopeDashboard\ApiTypes\ApiTypeMatcher;
 
 class TelescopeQueryService
@@ -14,13 +15,10 @@ class TelescopeQueryService
 
     protected int $perPage;
 
-    protected ApiTypeMatcher $apiTypes;
-
-    public function __construct(?ApiTypeMatcher $apiTypes = null)
+    public function __construct()
     {
         $this->connection = config('wame-telescope-dashboard.connection', 'mysql_telescope');
         $this->perPage = config('wame-telescope-dashboard.per_page', 50);
-        $this->apiTypes = $apiTypes ?? app(ApiTypeMatcher::class);
     }
 
     public function search(array $filters): array
@@ -62,7 +60,7 @@ class TelescopeQueryService
                 'batch_id' => $entry->batch_id,
                 'type' => $entry->type,
                 'family_hash' => $entry->family_hash,
-                'content' => $this->summarizeContent($entry->type, $content),
+                'content' => $this->summarizeContent($entry->type, $content, $entry->api_type ?? null),
                 'created_at' => $entry->created_at,
             ];
         })->values();
@@ -145,7 +143,7 @@ class TelescopeQueryService
                     'uuid' => $batchEntry->uuid,
                     'sequence' => $batchEntry->sequence,
                     'type' => $batchEntry->type,
-                    'content' => $this->summarizeContent($batchEntry->type, $content),
+                    'content' => $this->summarizeContent($batchEntry->type, $content, $batchEntry->api_type ?? null),
                     'created_at' => $batchEntry->created_at,
                 ];
             })->values()->toArray();
@@ -261,7 +259,7 @@ class TelescopeQueryService
         }
 
         if (! empty($filters['api_type'])) {
-            $this->apiTypes->applyFilter($query, 'request', (string) $filters['api_type']);
+            $this->applyApiTypeFilter($query, (string) $filters['api_type']);
         }
 
         if (! empty($filters['route_group'])) {
@@ -271,6 +269,20 @@ class TelescopeQueryService
                 $query->where('c_uri', 'LIKE', $pattern);
             }
         }
+    }
+
+    /**
+     * Filter on the stored API type (indexed equality, see ApiTypeColumn).
+     */
+    protected function applyApiTypeFilter(Builder $query, string $apiType): void
+    {
+        if ($apiType === ApiTypeMatcher::UNMATCHED) {
+            $query->whereNull(ApiTypeColumn::COLUMN);
+
+            return;
+        }
+
+        $query->where(ApiTypeColumn::COLUMN, $apiType);
     }
 
     /**
@@ -481,7 +493,7 @@ class TelescopeQueryService
         }
 
         if (! empty($filters['api_type'])) {
-            $this->apiTypes->applyFilter($query, 'client_request', (string) $filters['api_type']);
+            $this->applyApiTypeFilter($query, (string) $filters['api_type']);
         }
 
         if (! empty($filters['client_status'])) {
@@ -516,7 +528,10 @@ class TelescopeQueryService
         }
     }
 
-    protected function summarizeContent(string $type, ?array $content): array
+    /**
+     * @param  string|null  $apiType  The stored api_type column of the entry.
+     */
+    protected function summarizeContent(string $type, ?array $content, ?string $apiType = null): array
     {
         if (! $content) {
             return [];
@@ -526,7 +541,7 @@ class TelescopeQueryService
             'request' => [
                 'method' => $content['method'] ?? null,
                 'uri' => $content['uri'] ?? null,
-                'api_type' => $this->apiTypes->resolve('request', $content['method'] ?? null, $content['uri'] ?? null),
+                'api_type' => $apiType,
                 'response_status' => $content['response_status'] ?? null,
                 'duration' => $content['duration'] ?? null,
                 'memory' => $content['memory'] ?? null,
@@ -616,7 +631,7 @@ class TelescopeQueryService
             'client_request' => [
                 'method' => $content['method'] ?? null,
                 'uri' => $content['uri'] ?? null,
-                'api_type' => $this->apiTypes->resolve('client_request', $content['method'] ?? null, $content['uri'] ?? null),
+                'api_type' => $apiType,
                 'response_status' => $content['response_status'] ?? null,
                 'duration' => $content['duration'] ?? null,
             ],
