@@ -145,6 +145,10 @@ return [
         'listeners' => 'Listenery',
     ],
 
+    'placeholders' => [
+        'user_email' => 'e-mail, auth ID nebo user ID...',
+    ],
+
     'values' => [
         'all' => 'Vše',
         'yes' => 'Ano',

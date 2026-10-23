@@ -37,7 +37,7 @@
                                 'cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-telescope-border/50 transition-colors': col.sortable,
                                 'bg-gray-100 dark:bg-telescope-border/30': col.sortable && sortBy === col.sortKey
                             }"
-                            :style="col.width ? { width: col.width } : {}"
+                            :style="{ width: col.width, minWidth: col.minWidth }"
                             @click="col.sortable ? $emit('sort', col.sortKey || col.key) : null"
                         >
                             <span class="inline-flex items-center gap-1">
@@ -68,6 +68,7 @@
                                     <span
                                         class="block"
                                         :class="col.wrap ? 'whitespace-normal break-all' : 'truncate max-w-xs'"
+                                        :style="{ minWidth: col.minWidth }"
                                         :title="String(getNestedValue(entry, col.key) ?? '')"
                                     >
                                         {{ formatValue(getNestedValue(entry, col.key), col) }}

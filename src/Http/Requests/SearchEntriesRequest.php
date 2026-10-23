@@ -29,6 +29,8 @@ class SearchEntriesRequest extends FormRequest
             'content' => ['nullable', 'string', 'max:500'],
             // Request / client request API type
             'api_type' => ['nullable', 'string', 'max:255'],
+            // Request / client request user search (email, Auth ID or user ID)
+            'user_email' => ['nullable', 'string', 'max:255'],
             // Request-specific
             'methods' => ['nullable', 'array'],
             'methods.*' => ['string', 'in:GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS'],
@@ -37,7 +39,6 @@ class SearchEntriesRequest extends FormRequest
             'statuses' => ['nullable', 'array'],
             'statuses.*' => ['string'],
             'min_duration' => ['nullable', 'numeric', 'min:0'],
-            'user_email' => ['nullable', 'string', 'max:255'],
             // Query-specific
             'slow_query' => ['nullable', 'boolean'],
             'query_type' => ['nullable', 'string', 'in:select,insert,update,delete'],

@@ -37,6 +37,16 @@
                 />
             </div>
             <div class="mb-4">
+                <label for="client-request-user-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t.filters?.user_email || 'User Email / Auth ID / User ID' }}</label>
+                <input
+                    id="client-request-user-email"
+                    v-model="filters.user_email"
+                    type="text"
+                    class="input-field"
+                    :placeholder="t.placeholders?.user_email || 'email, auth ID or user ID...'"
+                />
+            </div>
+            <div class="mb-4">
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
                 <div class="flex flex-wrap gap-2">
                     <label v-for="s in ['2xx','3xx','4xx','5xx']" :key="s" class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
@@ -91,6 +101,9 @@
             <template #cell-content.response_status="{ value }">
                 <Badge :label="value" type="status" />
             </template>
+            <template #cell-content.user="{ value }">
+                <UserCell :value="value" />
+            </template>
             <template #detail="{ detail, loading: dl }">
                 <EntryDetail :detail="detail" :loading="dl" :tabs="tabs" />
             </template>
@@ -110,6 +123,7 @@ import EntryDetail from '../shared/EntryDetail.vue';
 import LoadMore from '../shared/LoadMore.vue';
 import DateRangeFilter from '../shared/DateRangeFilter.vue';
 import Badge from '../shared/Badge.vue';
+import UserCell from '../shared/UserCell.vue';
 import { getConfig, getTranslations } from '../../api';
 
 const t = getTranslations();
@@ -140,6 +154,7 @@ const { filters, getActiveFilters, resetFilters } = useFilters({
     client_statuses: [],
     min_duration: null,
     content: '',
+    user_email: '',
     date_from: '',
     date_to: ''
 });
@@ -149,9 +164,10 @@ const { restoreFromUrl, syncToUrl } = useUrlSync(filters, sortBy, sortDirection)
 const columns = [
     { key: 'content.method', label: 'Method', width: '80px' },
     ...(apiTypeNames.length ? [{ key: 'content.api_type', label: t.columns?.api_type || 'API Type', width: '240px' }] : []),
-    { key: 'content.uri', label: 'URI', wrap: true, maxChars: 300 },
+    { key: 'content.uri', label: 'URI', wrap: true, maxChars: 300, minWidth: '280px' },
     { key: 'content.response_status', label: 'Status', width: '80px' },
     { key: 'content.duration', label: 'Duration', width: '120px', format: 'duration', sortable: true, sortKey: 'content.duration' },
+    { key: 'content.user', label: t.columns?.user || 'User', width: '150px' },
     { key: 'created_at', label: 'Time', format: 'datetime', width: '180px', sortable: true, sortKey: 'created_at' }
 ];
 

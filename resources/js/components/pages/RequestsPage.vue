@@ -106,11 +106,7 @@
                 <Badge :label="value" type="status" />
             </template>
             <template #cell-content.user="{ value }">
-                <div v-if="value" class="truncate">
-                    <span class="block truncate" :title="value.email">{{ value.email || '-' }}</span>
-                    <span v-if="value.id" class="block truncate text-xs text-gray-400 dark:text-gray-500" :title="value.id">{{ value.id }}</span>
-                </div>
-                <span v-else>-</span>
+                <UserCell :value="value" />
             </template>
             <template #cell-content.duration="{ value }">
                 <span :class="value > 1000 ? 'text-red-400' : value > 500 ? 'text-yellow-400' : 'text-gray-300'">
@@ -147,6 +143,7 @@ import EntryDetail from '../shared/EntryDetail.vue';
 import LoadMore from '../shared/LoadMore.vue';
 import Badge from '../shared/Badge.vue';
 import DateRangeFilter from '../shared/DateRangeFilter.vue';
+import UserCell from '../shared/UserCell.vue';
 
 const t = getTranslations();
 const apiTypeNames = getConfig().apiTypes?.request || [];
@@ -171,7 +168,7 @@ const { restoreFromUrl, syncToUrl } = useUrlSync(filters, sortBy, sortDirection)
 const columns = [
     { key: 'content.method', label: 'Method', width: '80px' },
     ...(apiTypeNames.length ? [{ key: 'content.api_type', label: t.columns?.api_type || 'API Type', width: '200px' }] : []),
-    { key: 'content.uri', label: 'URI', wrap: true, maxChars: 300 },
+    { key: 'content.uri', label: 'URI', wrap: true, maxChars: 300, minWidth: '280px' },
     { key: 'content.response_status', label: 'Status', width: '80px' },
     { key: 'content.duration', label: 'Duration', width: '120px', format: 'duration', sortable: true, sortKey: 'content.duration' },
     { key: 'content.user', label: 'User', width: '150px' },

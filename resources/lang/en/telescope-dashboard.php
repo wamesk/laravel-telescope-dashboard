@@ -145,6 +145,10 @@ return [
         'listeners' => 'Listeners',
     ],
 
+    'placeholders' => [
+        'user_email' => 'email, auth ID or user ID...',
+    ],
+
     'values' => [
         'all' => 'All',
         'yes' => 'Yes',

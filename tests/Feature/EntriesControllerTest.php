@@ -152,3 +152,29 @@ it('accepts valid log filters', function () {
         ])
         ->assertOk();
 })->skip(fn () => ! telescopeDbAvailable(), 'Telescope DB connection not available');
+
+it('validates the user search length for client requests', function () {
+    $user = createAuthorizedUser();
+    $path = config('wame-telescope-dashboard.path', 'telescope-dashboard');
+
+    $this->actingAs($user)
+        ->postJson("/{$path}/api/entries", [
+            'type' => 'client_request',
+            'user_email' => str_repeat('a', 256),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['user_email']);
+});
+
+it('accepts the user search for client requests', function () {
+    $user = createAuthorizedUser();
+    $path = config('wame-telescope-dashboard.path', 'telescope-dashboard');
+
+    $this->actingAs($user)
+        ->postJson("/{$path}/api/entries", [
+            'type' => 'client_request',
+            'user_email' => '992fc05b-f93c-4b6b-afcb-6fa5b856caf2',
+        ])
+        ->assertOk()
+        ->assertJsonStructure(['entries', 'has_more', 'next_cursor']);
+})->skip(fn () => ! telescopeDbAvailable(), 'Telescope DB connection not available');

@@ -121,8 +121,8 @@ Each entry type provides its own set of filters. Examples:
 
 | Entry Type | Available Filters |
 |---|---|
-| **Requests** | HTTP method, API type, URI, status code (2xx/3xx/4xx/5xx), min duration, route group, user email |
-| **Client Requests** | HTTP method, API type, URI, status code (2xx/3xx/4xx/5xx), min duration |
+| **Requests** | HTTP method, API type, URI, status code (2xx/3xx/4xx/5xx), min duration, route group, user (email / Auth ID / user ID) |
+| **Client Requests** | HTTP method, API type, URI, status code (2xx/3xx/4xx/5xx), min duration, user (email / Auth ID / user ID) |
 | **Queries** | Slow queries (>100ms), query type (SELECT/INSERT/UPDATE/DELETE), min duration |
 | **Exceptions** | Exception class |
 | **Jobs** | Status (pending/completed/failed), job name |
@@ -133,6 +133,19 @@ Each entry type provides its own set of filters. Examples:
 | **Cache** | Type (hit/missed/set/forget), key |
 
 All entry types also support **date range** and **content search** filters.
+
+#### User filter (Requests and Client Requests)
+
+The user filter reads the authenticated user Telescope stores on each entry (the `Auth:{id}` tag and `content.user`), and the **User** column shows its email and ID. The input format picks the lookup:
+
+| Input | Lookup |
+|---|---|
+| Full UUID | Indexed tag lookup `Auth:{uuid}` |
+| UUID prefix (8+ hex characters) | Indexed tag prefix `Auth:{prefix}%` |
+| Contains `@` | `content.user.email` contains the value |
+| Anything else | `content.user.email` or `content.user.id` contains the value |
+
+Telescope records a user only while one is authenticated. Entries recorded without one — queued jobs processed by a worker, scheduled commands, requests before login — have no user, so the filter cannot find them and their User cell shows `-`.
 
 ### Sorting
 

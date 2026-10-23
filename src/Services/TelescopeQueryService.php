@@ -519,6 +519,10 @@ class TelescopeQueryService
         if (! empty($filters['min_duration'])) {
             $query->where('c_duration', '>=', $filters['min_duration']);
         }
+
+        if (! empty($filters['user_email'])) {
+            $this->applyUserSearch($query, (string) $filters['user_email']);
+        }
     }
 
     protected function applyBatchFilters(Builder $query, array $filters): void
@@ -546,10 +550,7 @@ class TelescopeQueryService
                 'duration' => $content['duration'] ?? null,
                 'memory' => $content['memory'] ?? null,
                 'controller_action' => $content['controller_action'] ?? null,
-                'user' => isset($content['user']) ? [
-                    'email' => $content['user']['email'] ?? $content['user']['name'] ?? null,
-                    'id' => $content['user']['id'] ?? null,
-                ] : null,
+                'user' => $this->summarizeUser($content),
                 'ip_address' => $content['ip_address'] ?? null,
             ],
             'query' => [
@@ -634,6 +635,7 @@ class TelescopeQueryService
                 'api_type' => $apiType,
                 'response_status' => $content['response_status'] ?? null,
                 'duration' => $content['duration'] ?? null,
+                'user' => $this->summarizeUser($content),
             ],
             'batch' => [
                 'name' => $content['name'] ?? null,
@@ -643,6 +645,28 @@ class TelescopeQueryService
             ],
             default => array_slice($content, 0, 10),
         };
+    }
+
+    /**
+     * Summarize the authenticated user Telescope stored on the entry.
+     *
+     * Telescope adds `content.user` (id, name, email) to every entry recorded
+     * while a user is authenticated; entries recorded without one (queued
+     * jobs, scheduled commands, requests before login) have none.
+     *
+     * @param  array<string, mixed>  $content
+     * @return array{email: mixed, id: mixed}|null
+     */
+    protected function summarizeUser(array $content): ?array
+    {
+        if (! isset($content['user'])) {
+            return null;
+        }
+
+        return [
+            'email' => $content['user']['email'] ?? $content['user']['name'] ?? null,
+            'id' => $content['user']['id'] ?? null,
+        ];
     }
 
     protected function getRequestFilterValues(string $connection): array
